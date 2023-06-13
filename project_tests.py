@@ -1,270 +1,245 @@
-<!DOCTYPE HTML>
-<html>
+import numpy as np
+import pandas as pd
 
-<head>
-    <meta charset="utf-8">
+from collections import OrderedDict
 
-    <title>project_tests.py (editing)</title>
-    <link id="favicon" rel="shortcut icon" type="image/x-icon" href="/static/base/images/favicon-file.ico?v=e2776a7f45692c839d6eea7d7ff6f3b2">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="/static/components/jquery-ui/themes/smoothness/jquery-ui.min.css?v=3c2a865c832a1322285c55c6ed99abb2" type="text/css" />
-    <link rel="stylesheet" href="/static/components/jquery-typeahead/dist/jquery.typeahead.min.css?v=7afb461de36accb1aa133a1710f5bc56" type="text/css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    
-<link rel="stylesheet" href="/static/components/codemirror/lib/codemirror.css?v=288352df06a67ee35003b0981da414ac">
-<link rel="stylesheet" href="/static/components/codemirror/addon/dialog/dialog.css?v=c89dce10b44d2882a024e7befc2b63f5">
-
-    <link rel="stylesheet" href="/static/style/style.min.css?v=4b4b8cb1e49605137f77fed041f8922b" type="text/css"/>
-    
-
-    <link rel="stylesheet" href="/custom/custom.css" type="text/css" />
-    <script src="/static/components/es6-promise/promise.min.js?v=f004a16cb856e0ff11781d01ec5ca8fe" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/components/preact/index.js?v=00a2fac73c670ce39ac53d26640eb542" type="text/javascript"></script>
-    <script src="/static/components/proptypes/index.js?v=c40890eb04df9811fcc4d47e53a29604" type="text/javascript"></script>
-    <script src="/static/components/preact-compat/index.js?v=aea8f6660e54b18ace8d84a9b9654c1c" type="text/javascript"></script>
-    <script src="/static/components/requirejs/require.js?v=951f856e81496aaeec2e71a1c2c0d51f" type="text/javascript" charset="utf-8"></script>
-    <script>
-      require.config({
-          
-          urlArgs: "v=20230503220541",
-          
-          baseUrl: '/static/',
-          paths: {
-            'auth/js/main': 'auth/js/main.min',
-            custom : '/custom',
-            nbextensions : '/nbextensions',
-            kernelspecs : '/kernelspecs',
-            underscore : 'components/underscore/underscore-min',
-            backbone : 'components/backbone/backbone-min',
-            jed: 'components/jed/jed',
-            jquery: 'components/jquery/jquery.min',
-            json: 'components/requirejs-plugins/src/json',
-            text: 'components/requirejs-text/text',
-            bootstrap: 'components/bootstrap/js/bootstrap.min',
-            bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            'jquery-ui': 'components/jquery-ui/jquery-ui.min',
-            moment: 'components/moment/min/moment-with-locales',
-            codemirror: 'components/codemirror',
-            termjs: 'components/xterm.js/xterm',
-            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead.min',
-          },
-          map: { // for backward compatibility
-              "*": {
-                  "jqueryui": "jquery-ui",
-              }
-          },
-          shim: {
-            typeahead: {
-              deps: ["jquery"],
-              exports: "typeahead"
-            },
-            underscore: {
-              exports: '_'
-            },
-            backbone: {
-              deps: ["underscore", "jquery"],
-              exports: "Backbone"
-            },
-            bootstrap: {
-              deps: ["jquery"],
-              exports: "bootstrap"
-            },
-            bootstraptour: {
-              deps: ["bootstrap"],
-              exports: "Tour"
-            },
-            "jquery-ui": {
-              deps: ["jquery"],
-              exports: "$"
-            }
-          },
-          waitSeconds: 30,
-      });
-
-      require.config({
-          map: {
-              '*':{
-                'contents': 'services/contents',
-              }
-          }
-      });
-
-      // error-catching custom.js shim.
-      define("custom", function (require, exports, module) {
-          try {
-              var custom = require('custom/custom');
-              console.debug('loaded custom.js');
-              return custom;
-          } catch (e) {
-              console.error("error loading custom.js", e);
-              return {};
-          }
-      })
-
-    document.nbjs_translations = {"domain": "nbjs", "locale_data": {"nbjs": {"": {"domain": "nbjs"}}}};
-    document.documentElement.lang = navigator.language.toLowerCase();
-    </script>
-
-    
-    
-
-</head>
-
-<body class="edit_app "
- 
-data-base-url="/"
-data-file-path="project_tests.py"
-
-  
- 
-
-dir="ltr">
-
-<noscript>
-    <div id='noscript'>
-      Jupyter Notebook requires JavaScript.<br>
-      Please enable it to proceed. 
-  </div>
-</noscript>
-
-<div id="header">
-  <div id="header-container" class="container">
-  <div id="ipython_notebook" class="nav navbar-brand"><a href="/tree" title='dashboard'>
-      <img src='/static/base/images/logo.png?v=641991992878ee24c6f3826e81054a0f' alt='Jupyter Notebook'/>
-  </a></div>
-
-  
-
-<span id="save_widget" class="pull-left save_widget">
-    <span class="filename"></span>
-    <span class="last_modified"></span>
-</span>
+from tests import assert_output, project_test, assert_structure
 
 
-  
-  
-  
-  
+@project_test
+def test_get_documents(fn):
+    # Test 1
+    doc = '\nThis is inside the document\n' \
+          'This is the text that should be copied'
+    text = 'This is before the test document<DOCUMENT>{}</DOCUMENT>\n' \
+           'This is after the document\n' \
+           'This shouldn\t be included.'.format(doc)
 
-    <span id="login_widget">
-      
-    </span>
+    fn_inputs = {
+        'text': text}
+    fn_correct_outputs = OrderedDict([
+        (
+            'extracted_docs', [doc])])
 
-  
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
 
-  
-  
-  </div>
-  <div class="header-bar"></div>
+    # Test 2
+    ten_k_real_compressed_doc = '\n' \
+        '<TYPE>10-K\n' \
+        '<SEQUENCE>1\n' \
+        '<FILENAME>test-20171231x10k.htm\n' \
+        '<DESCRIPTION>10-K\n' \
+        '<TEXT>\n' \
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">\n' \
+        '<html>\n' \
+        '	<head>\n' \
+        '		<title>Document</title>\n' \
+        '	</head>\n' \
+        '	<body style="font-family:Times New Roman;font-size:10pt;">\n' \
+        '...\n' \
+        '<td><strong> Data Type:</strong></td>\n' \
+        '<td>xbrli:sharesItemType</td>\n' \
+        '</tr>\n' \
+        '<tr>\n' \
+        '<td><strong> Balance Type:</strong></td>\n' \
+        '<td>na</td>\n' \
+        '</tr>\n' \
+        '<tr>\n' \
+        '<td><strong> Period Type:</strong></td>\n' \
+        '<td>duration</td>\n' \
+        '</tr>\n' \
+        '</table></div>\n' \
+        '</div></td></tr>\n' \
+        '</table>\n' \
+        '</div>\n' \
+        '</body>\n' \
+        '</html>\n' \
+        '</TEXT>\n'
+    excel_real_compressed_doc = '\n' \
+        '<TYPE>EXCEL\n' \
+        '<SEQUENCE>106\n' \
+        '<FILENAME>Financial_Report.xlsx\n' \
+        '<DESCRIPTION>IDEA: XBRL DOCUMENT\n' \
+        '<TEXT>\n' \
+        'begin 644 Financial_Report.xlsx\n' \
+        'M4$L#!!0    ( %"E04P?(\\#P    !,"   +    7W)E;,O+G)E;.MDD^+\n' \
+        'MPD ,Q;]*F?L:5\#8CUYZ6U9_ )Q)OU#.Y,A$[%^>X>];+=44/ 87O+>CT?V\n' \
+        '...\n' \
+        'M,C,Q7V1E9BYX;6Q02P$"% ,4    " !0I4%,>V7[]F0L 0!(@A  %0\n' \
+        'M        @ %N9@, 86UZ;BTR,#$W,3(S,5]L86(N>&UL4$L! A0#%     @\n' \
+        'M4*5!3*U*Q:W#O0  U=\) !4              ( !!9,$ &%M>FXM,C Q-S$R\n' \
+        '@,S%?<)E+GAM;%!+!08     !@ & (H!  #[4 4    !\n' \
+        '\n' \
+        'end\n' \
+        '</TEXT>\n'
+    real_compressed_text = '<SEC-DOCUMENT>0002014754-18-050402.txt : 20180202\n' \
+        '<SEC-HEADER>00002014754-18-050402.hdr.sgml : 20180202\n' \
+        '<ACCEPTANCE-DATETIME>20180201204115\n' \
+        'ACCESSION NUMBER:		0002014754-18-050402\n' \
+        'CONFORMED SUBMISSION TYPE:	10-K\n' \
+        'PUBLIC DOCUMENT COUNT:		110\n' \
+        'CONFORMED PERIOD OF REPORT:	20171231\n' \
+        'FILED AS OF DATE:		20180202\n' \
+        'DATE AS OF CHANGE:		20180201\n' \
+        '\n' \
+        'FILER:\n' \
+        '\n' \
+        '	COMPANY DATA:	\n' \
+        '		COMPANY CONFORMED NAME:			TEST\n' \
+        '		CENTRAL INDEX KEY:			0001018724\n' \
+        '		STANDARD INDUSTRIAL CLASSIFICATION:	RANDOM [2357234]\n' \
+        '		IRS NUMBER:				91236464620\n' \
+        '		STATE OF INCORPORATION:			DE\n' \
+        '		FISCAL YEAR END:			1231\n' \
+        '\n' \
+        '	FILING VALUES:\n' \
+        '		FORM TYPE:		10-K\n' \
+        '		SEC ACT:		1934 Act\n' \
+        '		SEC FILE NUMBER:	000-2225413\n' \
+        '		FILM NUMBER:		13822526583969\n' \
+        '\n' \
+        '	BUSINESS ADDRESS:	\n' \
+        '		STREET 1:		422320 PLACE AVENUE\n' \
+        '		CITY:			SEATTLE\n' \
+        '		STATE:			WA\n' \
+        '		ZIP:			234234\n' \
+        '		BUSINESS PHONE:		306234534246600\n' \
+        '\n' \
+        '	MAIL ADDRESS:	\n' \
+        '		STREET 1:		422320 PLACE AVENUE\n' \
+        '		CITY:			SEATTLE\n' \
+        '		STATE:			WA\n' \
+        '		ZIP:			234234\n' \
+        '</SEC-HEADER>\n' \
+        '<DOCUMENT>{}</DOCUMENT>\n' \
+        '<DOCUMENT>{}</DOCUMENT>\n' \
+        '</SEC-DOCUMENT>\n'.format(ten_k_real_compressed_doc, excel_real_compressed_doc)
 
-  
+    fn_inputs = {
+        'text': real_compressed_text}
+    fn_correct_outputs = OrderedDict([
+        (
+            'extracted_docs', [ten_k_real_compressed_doc, excel_real_compressed_doc])])
 
-<div id="menubar-container" class="container">
-  <div id="menubar">
-    <div id="menus" class="navbar navbar-default" role="navigation">
-      <div class="container-fluid">
-          <p  class="navbar-text indicator_area">
-          <span id="current-mode" >current mode</span>
-          </p>
-        <button type="button" class="btn btn-default navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <i class="fa fa-bars"></i>
-          <span class="navbar-text">Menu</span>
-        </button>
-        <ul class="nav navbar-nav navbar-right">
-          <li id="notification_area"></li>
-        </ul>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
-              <ul id="file-menu" class="dropdown-menu">
-                <li id="new-file"><a href="#">New</a></li>
-                <li id="save-file"><a href="#">Save</a></li>
-                <li id="rename-file"><a href="#">Rename</a></li>
-                <li id="download-file"><a href="#">Download</a></li>
-              </ul>
-            </li>
-            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit</a>
-              <ul id="edit-menu" class="dropdown-menu">
-                <li id="menu-find"><a href="#">Find</a></li>
-                <li id="menu-replace"><a href="#">Find &amp; Replace</a></li>
-                <li class="divider"></li>
-                <li class="dropdown-header">Key Map</li>
-                <li id="menu-keymap-default"><a href="#">Default<i class="fa"></i></a></li>
-                <li id="menu-keymap-sublime"><a href="#">Sublime Text<i class="fa"></i></a></li>
-                <li id="menu-keymap-vim"><a href="#">Vim<i class="fa"></i></a></li>
-                <li id="menu-keymap-emacs"><a href="#">emacs<i class="fa"></i></a></li>
-              </ul>
-            </li>
-            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">View</a>
-              <ul id="view-menu" class="dropdown-menu">
-              <li id="toggle_header" title="Show/Hide the logo and notebook title (above menu bar)">
-              <a href="#">Toggle Header</a></li>
-              <li id="menu-line-numbers"><a href="#">Toggle Line Numbers</a></li>
-              </ul>
-            </li>
-            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Language</a>
-              <ul id="mode-menu" class="dropdown-menu">
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="lower-header-bar"></div>
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
 
 
-</div>
+@project_test
+def test_get_document_type(fn):
+    doc = '\n' \
+        '<TYPE>10-K\n' \
+        '<SEQUENCE>1\n' \
+        '<FILENAME>test-20171231x10k.htm\n' \
+        '<DESCRIPTION>10-K\n' \
+        '<TEXT>\n' \
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">\n' \
+        '...'
 
-<div id="site">
+    fn_inputs = {
+        'doc': doc}
+    fn_correct_outputs = OrderedDict([
+        (
+            'doc_type', '10-k')])
 
-
-<div id="texteditor-backdrop">
-<div id="texteditor-container" class="container"></div>
-</div>
-
-
-</div>
-
-
-
-
-
-
-    
-
-
-<script src="/static/edit/js/main.min.js?v=ac978ed627b00fbfa328acc3f14b22fb" type="text/javascript" charset="utf-8"></script>
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
 
 
-<script type='text/javascript'>
-  function _remove_token_from_url() {
-    if (window.location.search.length <= 1) {
-      return;
-    }
-    var search_parameters = window.location.search.slice(1).split('&');
-    for (var i = 0; i < search_parameters.length; i++) {
-      if (search_parameters[i].split('=')[0] === 'token') {
-        // remote token from search parameters
-        search_parameters.splice(i, 1);
-        var new_search = '';
-        if (search_parameters.length) {
-          new_search = '?' + search_parameters.join('&');
-        }
-        var new_url = window.location.origin + 
-                      window.location.pathname + 
-                      new_search + 
-                      window.location.hash;
-        window.history.replaceState({}, "", new_url);
-        return;
-      }
-    }
-  }
-  _remove_token_from_url();
-</script>
-</body>
+@project_test
+def test_lemmatize_words(fn):
+    fn_inputs = {
+        'words': ['cow', 'running', 'jeep', 'swimmers', 'tackle', 'throw', 'driven']}
+    fn_correct_outputs = OrderedDict([
+        (
+            'lemmatized_words', ['cow', 'run', 'jeep', 'swimmers', 'tackle', 'throw', 'drive'])])
 
-</html>
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
+
+
+@project_test
+def test_get_bag_of_words(fn):
+    def sort_ndarray(array):
+        hashes = [hash(str(x)) for x in array]
+        sotred_indicies = sorted(range(len(hashes)), key=lambda k: hashes[k])
+
+        return array[sotred_indicies]
+
+    fn_inputs = {
+        'sentiment_words': pd.Series(['one', 'last', 'second']),
+        'docs': [
+            'this is a document',
+            'this document is the second document',
+            'last one']}
+    fn_correct_outputs = OrderedDict([
+        (
+            'bag_of_words', np.array([
+                [0, 0, 0],
+                [1, 0, 0],
+                [0, 1, 1]]))])
+
+    fn_out = fn(**fn_inputs)
+    assert_structure(fn_out, fn_correct_outputs['bag_of_words'], 'bag_of_words')
+    assert np.array_equal(sort_ndarray(fn_out.T), sort_ndarray(fn_correct_outputs['bag_of_words'].T)), \
+        'Wrong value for bag_of_words.\n' \
+        'INPUT docs:\n{}\n\n' \
+        'OUTPUT bag_of_words:\n{}\n\n' \
+        'A POSSIBLE CORRECT OUTPUT FOR bag_of_words:\n{}\n'\
+        .format(fn_inputs['docs'], fn_out, fn_correct_outputs['bag_of_words'])
+
+
+@project_test
+def test_get_jaccard_similarity(fn):
+    fn_inputs = {
+        'bag_of_words_matrix': np.array([
+                [0, 1, 1, 0, 0, 0, 1],
+                [0, 1, 2, 0, 1, 1, 1],
+                [1, 0, 0, 1, 0, 0, 0]])}
+    fn_correct_outputs = OrderedDict([
+        (
+            'jaccard_similarities', [0.7142857142857143, 0.0])])
+
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
+
+
+@project_test
+def test_get_tfidf(fn):
+    def sort_ndarray(array):
+        hashes = [hash(str(x)) for x in array]
+        sotred_indicies = sorted(range(len(hashes)), key=lambda k: hashes[k])
+
+        return array[sotred_indicies]
+
+    fn_inputs = {
+        'sentiment_words': pd.Series(['one', 'last', 'second']),
+        'docs': [
+            'this is a document',
+            'this document is the second document',
+            'last one']}
+    fn_correct_outputs = OrderedDict([
+        (
+            'tfidf', np.array([
+                [0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [0.0, 0.70710678, 0.70710678]]))])
+
+    fn_out = fn(**fn_inputs)
+    assert_structure(fn_out, fn_correct_outputs['tfidf'], 'tfidf')
+    assert np.isclose(sort_ndarray(fn_out.T), sort_ndarray(fn_correct_outputs['tfidf'].T)).all(), \
+        'Wrong value for tfidf.\n' \
+        'INPUT docs:\n{}\n\n' \
+        'OUTPUT tfidf:\n{}\n\n' \
+        'A POSSIBLE CORRECT OUTPUT FOR tfidf:\n{}\n'\
+        .format(fn_inputs['docs'], fn_out, fn_correct_outputs['tfidf'])
+
+
+@project_test
+def test_get_cosine_similarity(fn):
+    fn_inputs = {
+        'tfidf_matrix': np.array([
+                [0.0,           0.57735027, 0.57735027, 0.0,        0.0,        0.0,        0.57735027],
+                [0.0,           0.32516555, 0.6503311,  0.0,        0.42755362, 0.42755362, 0.32516555],
+                [0.70710678,    0.0,        0.0,        0.70710678, 0.0,        0.0,        0.0]])}
+    fn_correct_outputs = OrderedDict([
+        (
+            'cosine_similarities', [0.75093766927060945, 0.0])])
+
+    assert_output(fn, fn_inputs, fn_correct_outputs, check_parameter_changes=False)
